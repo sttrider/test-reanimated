@@ -2,6 +2,8 @@ import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, FlatList} from 'react-native';
 import Animated from 'react-native-reanimated';
 
+const {Value, interpolate, set, event, Extrapolate} = Animated;
+
 const mock = () => {
   const array = [];
   for (let i = 1; i <= 1000; i++) {
@@ -9,8 +11,6 @@ const mock = () => {
   }
   return array;
 };
-
-const {Value, interpolate, set, event, Extrapolate} = Animated;
 
 const renderItem = ({item}) => {
   return (
@@ -25,11 +25,22 @@ const keyExtractor = item => `${item.id}`;
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
+const data = mock();
+const Y = new Value(0);
+
+const handleScroll = event(
+  [
+    {
+      nativeEvent: {
+        contentOffset: {y: y => set(Y, y)},
+      },
+    },
+  ],
+  {useNativeDriver: true},
+);
+
 const FlatlistPage = () => {
   const [heightHeader, setHeightHeader] = useState(0);
-
-  const data = mock();
-  const Y = new Value(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -46,17 +57,6 @@ const FlatlistPage = () => {
   const handleOnLayout = ({nativeEvent}) => {
     setHeightHeader(nativeEvent.layout.height);
   };
-
-  const handleScroll = event(
-    [
-      {
-        nativeEvent: {
-          contentOffset: {y: y => set(Y, y)},
-        },
-      },
-    ],
-    {useNativeDriver: true},
-  );
 
   const translateY = interpolate(Y, {
     inputRange: [0, heightHeader],
