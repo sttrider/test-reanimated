@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet, FlatList} from 'react-native';
 import Animated from 'react-native-reanimated';
-import {FlatList} from 'react-native-gesture-handler';
 
 const mock = () => {
   const array = [];
@@ -11,16 +10,7 @@ const mock = () => {
   return array;
 };
 
-const {
-  Value,
-  interpolate,
-  block,
-  cond,
-  greaterOrEq,
-  set,
-  event,
-  lessOrEq,
-} = Animated;
+const {Value, interpolate, set, event, Extrapolate} = Animated;
 
 const renderItem = ({item}) => {
   return (
@@ -42,33 +32,36 @@ const FlatlistPage = () => {
   const Y = new Value(0);
 
   useEffect(() => {
-    setInterval(() => {
+    const interval = setInterval(() => {
       for (let i = 0; i < 5000; i++) {
         console.log('blocking thread');
       }
     }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
   });
 
   const handleOnLayout = ({nativeEvent}) => {
     setHeightHeader(nativeEvent.layout.height);
   };
 
-  const handlePan = event([
-    {
-      nativeEvent: ({contentOffset: {y: y}}) =>
-        block([
-          cond(
-            greaterOrEq(y, 1),
-            [set(Y, y)],
-            [cond(lessOrEq(y, heightHeader), [set(Y, 0)])],
-          ),
-        ]),
-    },
-  ]);
+  const handlePan = event(
+    [
+      {
+        nativeEvent: {
+          contentOffset: {y: y => set(Y, y)},
+        },
+      },
+    ],
+    {useNativeDriver: true},
+  );
 
   const translateY = interpolate(Y, {
     inputRange: [0, heightHeader],
     outputRange: [0, -heightHeader],
+    extrapolate: Extrapolate.CLAMP,
   });
 
   return (
@@ -110,7 +103,7 @@ const styles = StyleSheet.create({
   },
   areaTopo: {
     backgroundColor: 'tomato',
-    height: 200,
+    height: 300,
     position: 'absolute',
     top: 0,
     width: '100%',
