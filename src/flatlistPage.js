@@ -47,7 +47,7 @@ const FlatlistPage = () => {
     setHeightHeader(nativeEvent.layout.height);
   };
 
-  const handlePan = event(
+  const handleScroll = event(
     [
       {
         nativeEvent: {
@@ -89,7 +89,7 @@ const FlatlistPage = () => {
           windowSize={10}
           maxToRenderPerBatch={10}
           updateCellsBatchingPeriod={10}
-          onScroll={handlePan}
+          onScroll={handleScroll}
           contentContainerStyle={{paddingTop: heightHeader}}
         />
       )}
