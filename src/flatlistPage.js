@@ -1,21 +1,28 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import Animated from 'react-native-reanimated';
 import {FlatList} from 'react-native-gesture-handler';
-import {onScroll} from 'react-native-redash';
 
 const mock = () => {
   const array = [];
-  for (let i = 1; i <= 100; i++) {
+  for (let i = 1; i <= 1000; i++) {
     array.push({id: i, name: `Item ${i}`});
   }
   return array;
 };
 
-const {Value, diffClamp, interpolate, set} = Animated;
+const {
+  Value,
+  interpolate,
+  block,
+  cond,
+  greaterOrEq,
+  set,
+  event,
+  lessOrEq,
+} = Animated;
 
 const renderItem = ({item}) => {
-  // console.log(item);
   return (
     <View style={styles.item}>
       <Text style={styles.title}>{item.id}</Text>
@@ -26,45 +33,73 @@ const renderItem = ({item}) => {
 
 const keyExtractor = item => `${item.id}`;
 
-const y = new Value(0);
-
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
-let teste = null
-
 const FlatlistPage = () => {
-  const data = mock();
+  const [heightHeader, setHeightHeader] = useState(0);
 
-  const diffClampY = diffClamp(y, 0, 200);
-  const translateY = interpolate(y, {
-    inputRange: [0, 200],
-    outputRange: [0, -200],
+  const data = mock();
+  const Y = new Value(0);
+
+  useEffect(() => {
+    setInterval(() => {
+      for (let i = 0; i < 5000; i++) {
+        console.log('blocking thread');
+      }
+    }, 1000);
   });
 
-  const setCurrentPosition = ({nativeEvent}) => {
-    if (nativeEvent.contentOffset.y >= 1) {
-      y.setValue(nativeEvent.contentOffset.y);
-    } else if (nativeEvent.contentOffset.y <= 200) {
-      y.setValue(0);
-    }
+  const handleOnLayout = ({nativeEvent}) => {
+    setHeightHeader(nativeEvent.layout.height);
   };
+
+  const handlePan = event([
+    {
+      nativeEvent: ({contentOffset: {y: y}}) =>
+        block([
+          cond(
+            greaterOrEq(y, 1),
+            [set(Y, y)],
+            [cond(lessOrEq(y, heightHeader), [set(Y, 0)])],
+          ),
+        ]),
+    },
+  ]);
+
+  const translateY = interpolate(Y, {
+    inputRange: [0, heightHeader],
+    outputRange: [0, -heightHeader],
+  });
 
   return (
     <View style={styles.container}>
       <Animated.View
-        style={[styles.areaTopo, {transform: [{translateY: translateY}]}]}
+        onLayout={handleOnLayout}
+        style={[
+          styles.areaTopo,
+          {
+            transform: [
+              {
+                translateY: translateY,
+              },
+            ],
+          },
+        ]}
       />
-      <AnimatedFlatList
-        initialNumToRender={7}
-        keyExtractor={keyExtractor}
-        data={data}
-        renderItem={renderItem}
-        windowSize={7}
-        maxToRenderPerBatch={7}
-        updateCellsBatchingPeriod={7}
-        onScroll={setCurrentPosition}
-        contentContainerStyle={{paddingTop: 200}}
-      />
+
+      {heightHeader > 0 && (
+        <AnimatedFlatList
+          initialNumToRender={10}
+          keyExtractor={keyExtractor}
+          data={data}
+          renderItem={renderItem}
+          windowSize={10}
+          maxToRenderPerBatch={10}
+          updateCellsBatchingPeriod={10}
+          onScroll={handlePan}
+          contentContainerStyle={{paddingTop: heightHeader}}
+        />
+      )}
     </View>
   );
 };
@@ -83,7 +118,7 @@ const styles = StyleSheet.create({
   },
   item: {
     backgroundColor: '#f9c2ff',
-    height:100,
+    //height: 100,
     marginVertical: 8,
     marginHorizontal: 16,
   },
