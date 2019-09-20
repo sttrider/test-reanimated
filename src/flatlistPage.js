@@ -12,10 +12,10 @@ const mock = () => {
   return array;
 };
 
-const {Value, diffClamp, interpolate} = Animated;
+const {Value, diffClamp, interpolate, set} = Animated;
 
 const renderItem = ({item}) => {
-  console.log(item);
+  // console.log(item);
   return (
     <View style={styles.item}>
       <Text style={styles.title}>{item.id}</Text>
@@ -30,6 +30,8 @@ const y = new Value(0);
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
+let teste = null
+
 const FlatlistPage = () => {
   const data = mock();
 
@@ -38,6 +40,14 @@ const FlatlistPage = () => {
     inputRange: [0, 200],
     outputRange: [0, -200],
   });
+
+  const setCurrentPosition = ({nativeEvent}) => {
+    if (nativeEvent.contentOffset.y >= 1) {
+      y.setValue(nativeEvent.contentOffset.y);
+    } else if (nativeEvent.contentOffset.y <= 200) {
+      y.setValue(0);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -52,7 +62,7 @@ const FlatlistPage = () => {
         windowSize={7}
         maxToRenderPerBatch={7}
         updateCellsBatchingPeriod={7}
-        onScroll={onScroll({y: y})}
+        onScroll={setCurrentPosition}
         contentContainerStyle={{paddingTop: 200}}
       />
     </View>
@@ -73,7 +83,7 @@ const styles = StyleSheet.create({
   },
   item: {
     backgroundColor: '#f9c2ff',
-    padding: 20,
+    height:100,
     marginVertical: 8,
     marginHorizontal: 16,
   },
