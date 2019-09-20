@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import Animated from 'react-native-reanimated';
 import {FlatList} from 'react-native-gesture-handler';
@@ -34,7 +34,7 @@ const FlatlistPage = () => {
   const data = mock();
 
   const diffClampY = diffClamp(y, 0, 200);
-  const translateY = interpolate(diffClampY, {
+  const translateY = interpolate(y, {
     inputRange: [0, 200],
     outputRange: [0, -200],
   });
@@ -52,7 +52,6 @@ const FlatlistPage = () => {
         windowSize={7}
         maxToRenderPerBatch={7}
         updateCellsBatchingPeriod={7}
-        scrollEventThrottle={16}
         onScroll={onScroll({y: y})}
         contentContainerStyle={{paddingTop: 200}}
       />
