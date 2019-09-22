@@ -1,8 +1,22 @@
 import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, FlatList} from 'react-native';
 import Animated from 'react-native-reanimated';
+import {PanGestureHandler, State} from 'react-native-gesture-handler';
 
-const {Value, interpolate, set, event, Extrapolate} = Animated;
+const {
+  Value,
+  interpolate,
+  set,
+  event,
+  Extrapolate,
+  debug,
+  add,
+  multiply,
+  cond,
+  eq,
+  block,
+  lessThan,
+} = Animated;
 
 const mock = () => {
   const array = [];
@@ -27,35 +41,64 @@ const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
 const data = mock();
 const Y = new Value(0);
+const dragY = new Value(0);
+const state = new Value(0);
+const dragging = new Value(0);
+const start = new Value(0);
 
-const handleScroll = event(
-  [
-    {
-      nativeEvent: {
-        contentOffset: {y: y => set(Y, y)},
-      },
+const handleScroll = event([
+  {
+    nativeEvent: {
+      contentOffset: {y: y => debug('scroll', set(Y, y))},
     },
-  ],
-  {useNativeDriver: true},
-);
+  },
+]);
+
+const _onGestureEvent = event([
+  {
+    nativeEvent: {
+      translationY: y => set(dragY, y),
+      state: s => set(state, s),
+    },
+  },
+]);
 
 const FlatlistPage = () => {
   const [heightHeader, setHeightHeader] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      for (let i = 0; i < 5000; i++) {
-        console.log('blocking thread');
-      }
-    }, 1000);
+    const executeBlockThread = false;
+    let interval = null;
+    if (executeBlockThread) {
+      interval = setInterval(() => {
+        for (let i = 0; i < 5000; i++) {
+          console.log('blocking thread');
+        }
+      }, 1000);
+    }
 
     return () => {
-      clearInterval(interval);
+      if (executeBlockThread) {
+        clearInterval(interval);
+      }
     };
   });
 
   const handleOnLayout = ({nativeEvent}) => {
     setHeightHeader(nativeEvent.layout.height);
+  };
+
+  const trans = () => {
+    return block([
+      cond(
+        eq(state, State.ACTIVE),
+        debug('setY', set(Y, add(start, multiply(dragY, -1)))),
+        [set(start, Y), cond(lessThan(Y, 0), set(Y, 0))],
+      ),
+      debug('state', state),
+      debug('Y', Y),
+      translateY,
+    ]);
   };
 
   const translateY = interpolate(Y, {
@@ -66,19 +109,24 @@ const FlatlistPage = () => {
 
   return (
     <View style={styles.container}>
-      <Animated.View
-        onLayout={handleOnLayout}
-        style={[
-          styles.areaTopo,
-          {
-            transform: [
-              {
-                translateY: translateY,
-              },
-            ],
-          },
-        ]}
-      />
+      <PanGestureHandler
+        onGestureEvent={_onGestureEvent}
+        onHandlerStateChange={_onGestureEvent}
+        maxPointers={1}>
+        <Animated.View
+          onLayout={handleOnLayout}
+          style={[
+            styles.areaTopo,
+            {
+              transform: [
+                {
+                  translateY: trans(),
+                },
+              ],
+            },
+          ]}
+        />
+      </PanGestureHandler>
 
       {heightHeader > 0 && (
         <AnimatedFlatList
