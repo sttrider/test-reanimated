@@ -109,24 +109,19 @@ const FlatlistPage = () => {
 
   return (
     <View style={styles.container}>
-      <PanGestureHandler
-        onGestureEvent={_onGestureEvent}
-        onHandlerStateChange={_onGestureEvent}
-        maxPointers={1}>
-        <Animated.View
-          onLayout={handleOnLayout}
-          style={[
-            styles.areaTopo,
-            {
-              transform: [
-                {
-                  translateY: trans(),
-                },
-              ],
-            },
-          ]}
-        />
-      </PanGestureHandler>
+      <Animated.View
+        onLayout={handleOnLayout}
+        style={[
+          styles.areaTopo,
+          {
+            transform: [
+              {
+                translateY: trans(),
+              },
+            ],
+          },
+        ]}
+      />
 
       {heightHeader > 0 && (
         <AnimatedFlatList
@@ -155,7 +150,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     width: '100%',
-    zIndex: 2,
   },
   item: {
     backgroundColor: '#f9c2ff',
