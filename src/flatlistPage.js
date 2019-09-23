@@ -156,7 +156,7 @@ const FlatlistPage = () => {
               updateCellsBatchingPeriod={10}
               onGestureEvent={_onGestureEvent}
               renderScrollComponent={props => (
-                <Scroller handlerRef={scrollRef} {...props} contentContainerStyle={{ marginTop: 300 }} />
+                <Scroller handlerRef={scrollRef} {...props} />
               )}
             />
           </Animated.View>
