@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, FlatList} from 'react-native';
 import Animated from 'react-native-reanimated';
-import {PanGestureHandler, State} from 'react-native-gesture-handler';
+import {State} from 'react-native-gesture-handler';
 
 const {
   Value,
@@ -43,22 +43,12 @@ const data = mock();
 const Y = new Value(0);
 const dragY = new Value(0);
 const state = new Value(0);
-const dragging = new Value(0);
 const start = new Value(0);
 
 const handleScroll = event([
   {
     nativeEvent: {
       contentOffset: {y: y => debug('scroll', set(Y, y))},
-    },
-  },
-]);
-
-const _onGestureEvent = event([
-  {
-    nativeEvent: {
-      translationY: y => set(dragY, y),
-      state: s => set(state, s),
     },
   },
 ]);
