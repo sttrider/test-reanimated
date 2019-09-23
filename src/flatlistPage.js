@@ -1,7 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, FlatList} from 'react-native';
+import {View, Text, StyleSheet, FlatList, ScrollView} from 'react-native';
 import Animated from 'react-native-reanimated';
-import {PanGestureHandler, State} from 'react-native-gesture-handler';
+import {
+  PanGestureHandler,
+  NativeViewGestureHandler,
+  State,
+} from 'react-native-gesture-handler';
 
 const {
   Value,
@@ -97,15 +101,21 @@ const FlatlistPage = () => {
       ),
       debug('state', state),
       debug('Y', Y),
-      translateY,
+      Y.interpolate({
+        inputRange: [0, heightHeader],
+        outputRange: [0, -heightHeader],
+        extrapolate: Extrapolate.CLAMP,
+      }),
     ]);
   };
 
-  const translateY = interpolate(Y, {
+  const height = interpolate(Y, {
     inputRange: [0, heightHeader],
-    outputRange: [0, -heightHeader],
+    outputRange: [heightHeader, 0],
     extrapolate: Extrapolate.CLAMP,
   });
+
+  const scrollRef = React.createRef();
 
   return (
     <View style={styles.container}>
@@ -129,21 +139,38 @@ const FlatlistPage = () => {
       </PanGestureHandler>
 
       {heightHeader > 0 && (
-        <AnimatedFlatList
-          initialNumToRender={10}
-          keyExtractor={keyExtractor}
-          data={data}
-          renderItem={renderItem}
-          windowSize={10}
-          maxToRenderPerBatch={10}
-          updateCellsBatchingPeriod={10}
-          onScroll={handleScroll}
-          contentContainerStyle={{paddingTop: heightHeader}}
-        />
+        <PanGestureHandler
+          minDist={0}
+          simultaneousHandlers={scrollRef}
+          onGestureEvent={_onGestureEvent}
+          onHandlerStateChange={_onGestureEvent}>
+          <Animated.View style={styles.container}>
+            <Animated.View style={{width: '100%', height}} />
+            <FlatList
+              initialNumToRender={10}
+              keyExtractor={keyExtractor}
+              data={data}
+              renderItem={renderItem}
+              windowSize={10}
+              maxToRenderPerBatch={10}
+              updateCellsBatchingPeriod={10}
+              onGestureEvent={_onGestureEvent}
+              renderScrollComponent={props => (
+                <Scroller handlerRef={scrollRef} {...props} contentContainerStyle={{ marginTop: 300 }} />
+              )}
+            />
+          </Animated.View>
+        </PanGestureHandler>
       )}
     </View>
   );
 };
+
+const Scroller = ({handlerRef, ...props}) => (
+  <NativeViewGestureHandler ref={handlerRef}>
+    <ScrollView {...props} />
+  </NativeViewGestureHandler>
+);
 
 const styles = StyleSheet.create({
   container: {
